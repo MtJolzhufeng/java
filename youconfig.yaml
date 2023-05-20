@@ -1,0 +1,68 @@
+pipeline_template: 'COMMON/Jenkinsfile'
+
+build:
+  skip_test: true #是否跳过单元测试
+
+project:
+  code: bam
+  type: java
+
+artifacts:
+  pom.xml:
+    port: 8080
+    build:
+      need_extra_files_from_nexus:
+        - artifact_id: bam-client
+          project_code: bam
+          deploy_dir: view
+    environment_variable:
+      dev:
+        config_file_prefix: am-console-conf
+        properties_suffix: k8s-dev
+        JAVA_OPTS: '-Xms1000m -Xmx1000m -Duser.language=zh -Duser.region=CN 
+                    -Didp_global_config_path=/data'
+      test:
+        config_file_prefix: am-console-conf
+        properties_suffix: k8s-test
+        JAVA_OPTS: '-Xms1000m -Xmx1000m -Duser.language=zh -Duser.region=CN 
+                    -Didp_global_config_path=/data'
+      preview:
+        config_file_prefix: am-console-conf
+        properties_suffix: k8s-test
+        JAVA_OPTS: '-Xms1000m -Xmx1000m -Duser.language=zh -Duser.region=CN 
+                    -Didp_global_config_path=/data'
+    docker:
+      enable: true
+    deploy:
+      enable: true
+      persistence:
+        dev:
+          existingClaim: pvc-for-bam6
+          mountPath: /data
+        test:
+          existingClaim: pvc-for-bam6
+          mountPath: /data
+        preview:
+          existingClaim: pvc-for-bam6
+          mountPath: /data
+      ingress:
+        enable: true
+        context_path: /bam-api
+      resources:
+        dev:
+          limits:
+            memory: 1200Mi
+            cpu: 1
+          requests:
+            memory: 500Mi
+            cpu: 0.1
+        mix:
+          limits:
+            memory: 2400Mi
+            cpu: 2
+          requests:
+            memory: 2000Mi
+            cpu: 1
+
+debug:
+  maven_config: ""
